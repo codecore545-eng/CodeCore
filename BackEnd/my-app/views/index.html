@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCore — Server Status</title>
+    <style>
+        :root {
+            --bg: #05090a;
+            --bg-2: #070d0d;
+            --panel: #0b1313;
+            --panel-2: #0e1717;
+            --line: rgba(93, 255, 176, 0.14);
+            --line-strong: rgba(93, 255, 176, 0.28);
+            --green: #55ffb0;
+            --green-dim: #2f8f66;
+            --amber: #ffb454;
+            --red: #ff5f56;
+            --text: #d9fbe9;
+            --text-dim: #6e9484;
+            --text-faint: #4a6559;
+            --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse 120% 80% at 50% -10%, rgba(93, 255, 176, 0.06), transparent 55%),
+                var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+            overflow-x: hidden;
+        }
+
+        /* faint blueprint grid across the whole viewport */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line) 1px, transparent 1px);
+            background-size: 42px 42px;
+            opacity: .35;
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 0%, transparent 75%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .window {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 860px;
+            background: linear-gradient(180deg, var(--panel), var(--bg-2));
+            border: 1px solid rgba(93, 255, 176, 0.18);
+            border-radius: 10px;
+            box-shadow:
+                0 0 0 1px rgba(0, 0, 0, .4),
+                0 30px 80px -20px rgba(0, 0, 0, .7),
+                0 0 120px -40px rgba(85, 255, 176, .35);
+            overflow: hidden;
+            animation: rise .7s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* titlebar */
+        .titlebar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            background: rgba(0, 0, 0, .25);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dots span {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .dots .d1 {
+            background: var(--red);
+        }
+
+        .dots .d2 {
+            background: var(--amber);
+        }
+
+        .dots .d3 {
+            background: var(--green);
+        }
+
+        .titlebar .path {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text-dim);
+            letter-spacing: .02em;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .titlebar .path .cursor {
+            display: inline-block;
+            width: 7px;
+            height: 14px;
+            background: var(--green);
+            margin-left: 2px;
+            vertical-align: -2px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* body */
+        .content {
+            padding: 44px 44px 36px;
+        }
+
+        .brand-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-family: var(--mono);
+            font-weight: 700;
+            font-size: 42px;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .logo .bracket {
+            color: var(--green);
+        }
+
+        .tagline {
+            margin-top: 10px;
+            font-size: 15px;
+            color: var(--text-dim);
+            max-width: 40ch;
+            line-height: 1.6;
+        }
+
+        .tagline b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--green);
+            background: rgba(85, 255, 176, 0.08);
+            border: 1px solid rgba(85, 255, 176, 0.25);
+            padding: 8px 14px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .status-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: .6;
+            }
+        }
+
+        /* oscilloscope — signature element */
+        .scope {
+            margin-top: 34px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, .3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scope-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .scope-head span.live {
+            color: var(--green);
+        }
+
+        canvas#scope-canvas {
+            display: block;
+            width: 100%;
+            height: 120px;
+        }
+
+        /* command output metrics */
+        .metrics {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--line);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .metric {
+            background: var(--panel-2);
+            padding: 20px 22px;
+            transition: background .3s ease;
+        }
+
+        .metric:hover {
+            background: rgba(85, 255, 176, 0.05);
+        }
+
+        .metric .cmd {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--green-dim);
+        }
+
+        .metric .cmd::before {
+            content: "$ ";
+            color: var(--text-faint);
+        }
+
+        .metric .value {
+            margin-top: 10px;
+            font-family: var(--mono);
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .metric .value .unit {
+            font-size: 15px;
+            color: var(--text-dim);
+            font-weight: 500;
+            margin-left: 2px;
+        }
+
+        /* actions */
+        .actions {
+            margin-top: 34px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: var(--sans);
+            font-weight: 600;
+            font-size: 14.5px;
+            padding: 13px 26px;
+            border-radius: 7px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: var(--green);
+            color: #062117;
+            box-shadow: 0 0 0 rgba(85, 255, 176, 0);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px -8px rgba(85, 255, 176, .6);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-color: rgba(255, 255, 255, .14);
+            color: var(--text);
+        }
+
+        .btn-ghost:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .03);
+        }
+
+        /* footer */
+        .footer {
+            margin-top: 34px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-faint);
+        }
+
+        @media (max-width: 620px) {
+            .content {
+                padding: 32px 24px 28px;
+            }
+
+            .logo {
+                font-size: 32px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .titlebar .path {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="window">
+        <div class="titlebar">
+            <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+            <div class="path">codecore@prod:~$ status --watch<span class="cursor"></span></div>
+        </div>
+
+        <div class="content">
+            <div class="brand-row">
+                <div>
+                    <div class="logo"><span class="bracket">&lt;</span>CodeCore<span class="bracket">/&gt;</span></div>
+                    <div class="tagline">Express.js API server. <b>Fast, typed routes</b> and a request pipeline built
+                        for production traffic.</div>
+                </div>
+                <div class="status-pill"><span class="dot"></span> ONLINE</div>
+            </div>
+
+            <div class="scope">
+                <div class="scope-head">
+                    <span>request throughput <span class="live">● live</span></span>
+                    <span id="scopeReading">0 req/s</span>
+                </div>
+                <canvas id="scope-canvas"></canvas>
+            </div>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="cmd">requests.today</div>
+                    <div class="value"><span class="counter" data-target="2487">0</span></div>
+                </div>
+                <div class="metric">
+                    <div class="cmd">uptime.percent</div>
+                    <div class="value"><span class="counter" data-target="99" data-decimals="1">0</span><span
+                            class="unit">%</span></div>
+                </div>
+                <div class="metric">
+                    <div class="cmd">routes.registered</div>
+                    <div class="value"><span class="counter" data-target="35">0</span></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn-primary">View documentation</button>
+                <button class="btn-ghost">Open on GitHub</button>
+            </div>
+
+            <div class="footer">
+                <span>codecore v2.6.0 · node 20.14 lts</span>
+                <span id="uptimeClock">uptime 14d 06h 12m</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // counting animation
+        document.querySelectorAll(".counter").forEach(el => {
+            const target = +el.dataset.target;
+            const decimals = +el.dataset.decimals || 0;
+            const duration = 1200;
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - p, 3);
+                const val = target * eased;
+                el.textContent = decimals ? val.toFixed(decimals) : Math.floor(val).toLocaleString();
+                if (p < 1) requestAnimationFrame(tick);
+                else el.textContent = decimals ? target.toFixed(decimals) : target.toLocaleString();
+            }
+            requestAnimationFrame(tick);
+        });
+
+        // oscilloscope
+        const canvas = document.getElementById("scope-canvas");
+        const ctx = canvas.getContext("2d");
+        const reading = document.getElementById("scopeReading");
+        let dpr = Math.max(1, window.devicePixelRatio || 1);
+        let w, h;
+
+        function resize() {
+            const rect = canvas.getBoundingClientRect();
+            w = rect.width; h = rect.height;
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        const points = [];
+        const N = 140;
+        for (let i = 0; i < N; i++) points.push(6 + Math.random() * 4);
+
+        let t = 0;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        function step() {
+            t += 1;
+            points.shift();
+            // baseline wobble with occasional request spikes
+            let base = 8 + Math.sin(t / 14) * 4;
+            if (Math.random() < 0.06) { base += 22 + Math.random() * 30; }
+            points.push(Math.max(2, base));
+
+            ctx.clearRect(0, 0, w, h);
+
+            // midline
+            ctx.strokeStyle = "rgba(93,255,176,0.12)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h - 14);
+            ctx.lineTo(w, h - 14);
+            ctx.stroke();
+
+            // waveform
+            ctx.beginPath();
+            const step_x = w / (N - 1);
+            points.forEach((val, i) => {
+                const x = i * step_x;
+                const y = h - 14 - val;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = "#55ffb0";
+            ctx.lineWidth = 1.6;
+            ctx.shadowColor = "rgba(85,255,176,0.8)";
+            ctx.shadowBlur = 8;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            const current = Math.round(points[points.length - 1] * 3.2);
+            reading.textContent = current + " req/s";
+
+            if (!reduced) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+        if (reduced) {
+            // draw a single static frame for reduced-motion users
+            setTimeout(step, 50);
+        }
+
+        // fake uptime clock ticking upward
+        let seconds = 14 * 86400 + 6 * 3600 + 12 * 60;
+        const uptimeEl = document.getElementById("uptimeClock");
+        setInterval(() => {
+            seconds += 1;
+            const d = Math.floor(seconds / 86400);
+            const hh = Math.floor((seconds % 86400) / 3600);
+            const mm = Math.floor((seconds % 3600) / 60);
+            uptimeEl.textContent = `uptime ${d}d ${String(hh).padStart(2, "0")}h ${String(mm).padStart(2, "0")}m`;
+        }, 1000);
+    </script>
+
+</body>
+
+</html>
