@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
-import bcrypt from "bcrypt";
 import prisma from "../lib/prisma.js";
+import bcrypt from "bcrypt";
 
 const router = Router();
 

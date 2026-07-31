@@ -6,7 +6,7 @@ import prisma from "../lib/prisma.js";
 const router = Router();
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-const FRONTEND_URL = process.env.FRONTEND_URL;
+const CLIENT_URL = process.env.CLIENT_URL;
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -14,6 +14,24 @@ const transporter = nodemailer.createTransport({
     pass: EMAIL_PASSWORD,
   },
 });
+
+if (!EMAIL_USER) {
+  throw new Error(
+    "EMAIL_USER is not defined, Please read the README.md file and follow the steps to avoid errors.",
+  );
+}
+
+if (!EMAIL_PASSWORD) {
+  throw new Error(
+    "EMAIL_PASSWORD is not defined, Please read the README.md file and follow the steps to avoid errors.",
+  );
+}
+
+if (!CLIENT_URL) {
+  throw new Error(
+    "CLIENT_URL is not defined, Please read the README.md file and follow the steps to avoid errors.",
+  );
+}
 
 router.post("/auth/forgot-password", async (req, res) => {
   try {
@@ -45,7 +63,7 @@ router.post("/auth/forgot-password", async (req, res) => {
         resetPasswordExpires: tokenExpires,
       },
     });
-    const resetUrl = `${FRONTEND_URL}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${CLIENT_URL}/auth/reset-password/${resetToken}`;
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">

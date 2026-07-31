@@ -7,9 +7,18 @@ import { z } from "zod";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
+const NODE_ENV = process.env.NODE_ENV;
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined");
+  throw new Error(
+    "JWT_SECRET is not defined, Please read the README.md file and follow the steps to avoid errors.",
+  );
+}
+
+if (!NODE_ENV) {
+  throw new Error(
+    "NODE_ENV is not defined, Please read the README.md file and follow the steps to avoid errors.",
+  );
 }
 
 const registerSchema = z.object({
@@ -70,7 +79,7 @@ router.post("/auth/register", async (req, res) => {
     );
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
       path: "/",
