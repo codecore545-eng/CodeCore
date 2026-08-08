@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Startup - Please note, we want the design to look like this. (https://www.instagram.com/reel/DbqtZgDMNx2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
-## Getting Started
+Navbar
 
-First, run the development server:
+- Hero Section
+- Home
+- Services
+- Projects
+- About
+- Contact
+- Start your project
+- Log in
+- Registration
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Main - We want the best possible design
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Modern and professional design
+- Fully responsive on all devices
+- Smooth animations and transitions
+- Clean layout with good spacing
+- Fast loading and optimized performance
+- Use a consistent color palette and typography
+- Do not use unnecessary elements or excessive animations
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Section 1 - Statistics
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Section 2 - Main services
 
-## Learn More
+Section 3 - Works Exhibition (If no location is found, put "We are at the beginning".)
 
-To learn more about Next.js, take a look at the following resources:
+Section 4 - Why does the customer choose us?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Section 5 - Our Process
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Section 6 - Technologies
 
-## Deploy on Vercel
+Section 7 - About CodeCore
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Section 8 - FAQ
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Section 9 - Start your project
+
+Footer
+
+- Keep the footer simple and clean
+- Add social media links
+- Add copyright
